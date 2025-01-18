@@ -1,25 +1,61 @@
 import React from 'react';
 import './index.scss';
+import { Success } from './components/Success';
+import { Users } from './components/Users';
+
+// Тут список пользователей: https://reqres.in/api/users
 
 function App() {
-  const [count, setCount] = React.useState(0);
+  const [users, setUsers] = React.useState([]);
+  const [invites, setInvites] = React.useState([]);
+  const [success, setSuccess] = React.useState(false);
+  const [isLoading, setLoading] = React.useState(true);
+  const [searchValue, setSearchValue] = React.useState('');
 
-  const onClickPlus = () => {
-    setCount(count + 1);
+  React.useEffect(() => {
+    fetch('https://reqres.in/api/users')
+    .then(res => res.json())
+    .then(json => {
+      setUsers(json.data);
+    }).catch((err) => {
+      console.warn(err);
+      alert('ошибка при получении пользователя');
+    })
+    .finally(() => setLoading(false));
+  }, []);
+
+  const onChangeSearchValue = (event) => {
+    setSearchValue(event.target.value);
   };
 
-  const onClickMinus = () => {  
-    setCount(count - 1);
-  };
+  const onClickInvite = (id) => {
+    if (invites.includes(id)) {
+      setInvites(prev => prev.filter(_id => _id !== id));
+    } else {
+      setInvites(prev => [ ...prev, id]);
+    }
+  }
+
+  const onClickSendInvites = () => {
+    setSuccess(true);
+  }
 
   return (
     <div className="App">
-      <div>
-        <h2>Счетчик:</h2>
-        <h1>{count}</h1>
-        <button onClick={onClickMinus} className="minus">- Минус</button>
-        <button onClick={onClickPlus} className="plus">Плюс +</button>
-      </div>
+      {
+        success ? (
+          <Success count={invites.length}/>
+        ) : (
+      <Users 
+        onChangeSearchValue={onChangeSearchValue}
+        searchValue={searchValue}
+        items={users}
+        isLoading={isLoading}
+        invites={invites}
+        onClickInvite={onClickInvite}
+        onClickSendInvites={onClickSendInvites}
+      />
+    )}
     </div>
   );
 }
